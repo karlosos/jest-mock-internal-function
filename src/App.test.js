@@ -3,18 +3,40 @@ import { render, screen } from '@testing-library/react';
 import App from './App';
 import * as utils from "./demo/utils";
 
-describe('App', () => {
-  beforeEach(() => {
-    jest.spyOn(utils, "getData").mockReturnValue("mocked message");
-  })
+import { getDataSimple, getDataError} from "./demo/utils.mock"
 
+beforeEach(() => {
+  jest.spyOn(utils, "getData").mockImplementation(getDataSimple);
+})
+
+describe('App', () => {
   test('renders header', () => {
     render(<App />);
     expect(screen.getByText(/My app/i)).toBeInTheDocument()
   });
 
-  test('renders correct welcome message', () => {
+  test('mock default', async () => {
     render(<App />)
-    expect(screen.getByText(/mocked message/i)).toBeInTheDocument()
+    await screen.findByText(/Mocked John!/i);
+  });
+
+  test('custom mock', async () => {
+    jest.spyOn(utils, "getData").mockImplementation(async () => 'different data');
+
+    render(<App />);
+    await screen.findByText(/different data/i);
+  });
+
+  test('mock default again', async () => {
+    render(<App />)
+    await screen.findByText(/Mocked John!/i);
+  });
+
+  test('mock throws an error', async () => {
+    jest.spyOn(utils, "getData").mockImplementation(getDataError);
+
+    render(<App />)
+
+    await screen.findByText(/Error: error in getData/i);
   });
 })
