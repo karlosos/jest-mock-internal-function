@@ -63,7 +63,9 @@ describe('App', () => {
 })
 ```
 
-### Solution: using `jest.mock`
+### Solution using `jest.mock`
+
+You can see this solution on [main branch](https://github.com/karlosos/jest-mock-internal-function/blob/main/src/App.test.js).
 
 Instead of using `import * as ...` we can mock our module with `jest.mock`. Following test works fine:
 
@@ -88,7 +90,34 @@ describe('App', () => {
 })
 ```
 
-### Multiple mock implementations - hacky way
+### Solution using `jest.spyOn` in `beforeEach`
+
+You can see this solution on [spy-on-before-each](https://github.com/karlosos/jest-mock-internal-function/blob/spy-on-before-each/src/App.test.js) branch. Moving the line:
+
+```
+jest.spyOn(utils, "getData").mockReturnValue("mocked message");
+```
+
+inside `beforeEach` in `describe` block solves the issue.
+
+```jsx
+import * as utils from "./demo/utils";
+
+describe('App', () => {
+  beforeEach(() => {
+    jest.spyOn(utils, "getData").mockReturnValue("mocked message");
+  })
+
+  test('renders correct welcome message', () => {
+    render(<App />)
+    expect(screen.getByText(/mocked message/i)).toBeInTheDocument()
+  });
+})
+```
+
+I have no idea why moving `jest.spyOn` inside `beforeEach` solves the issue. It canno be defined in top-level scope and it also doesn't work inside `beforeAll` block. 🤔
+
+### Multiple mock implementations with `jest.doMock` - hacky way
 
 To mock the function with multiple implementations you can use `jest.doMock`. However, the it is required to import modules after mocking. More about `doMock` in [jest documentation](https://jestjs.io/docs/jest-object#jestdomockmodulename-factory-options). Solution based on [this repo by marr](https://github.com/marr/react-test-mock).
 
